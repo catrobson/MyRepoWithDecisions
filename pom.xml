@@ -1,19 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project>
+<project
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+  xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-
-  <groupId>org.kie.submarine</groupId>
-  <artifactId>quarkus-dmn-sample</artifactId>
-  <version>1.0-SNAPSHOT</version>
-
+  <groupId>com.myspace</groupId>
+  <artifactId>onboarding</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+  <name>onboarding</name>
+  <description>Onboarding function and service orchestration</description>
   <properties>
-    <quarkus.version>0.12.0</quarkus.version>
-    <surefire-plugin.version>2.22.0</surefire-plugin.version>
+    <quarkus.version>0.13.1</quarkus.version>
+    <submarine.version>8.0.0-SNAPSHOT</submarine.version>
+    <swagger.version>1.5.21</swagger.version>
+
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
-    <submarine.version>8.0.0-SNAPSHOT</submarine.version>
   </properties>
+
+  <repositories>
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
 
   <dependencyManagement>
     <dependencies>
@@ -30,51 +52,68 @@
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-resteasy</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-arc</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-jsonb</artifactId>
     </dependency>
 
-
     <dependency>
       <groupId>org.kie</groupId>
-      <artifactId>kie-dmn-rest-utils</artifactId>
+      <artifactId>kie-api</artifactId>
+      <version>${submarine.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.drools</groupId>
+      <artifactId>drools-core-static</artifactId>
+      <version>${submarine.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.drools</groupId>
+      <artifactId>drools-compiler</artifactId>
+      <version>${submarine.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.drools</groupId>
+      <artifactId>drools-canonical-model</artifactId>
+      <version>${submarine.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.drools</groupId>
+      <artifactId>drools-model-compiler</artifactId>
+      <version>${submarine.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jbpm</groupId>
+      <artifactId>jbpm-flow</artifactId>
       <version>${submarine.version}</version>
     </dependency>
 
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-junit5</artifactId>
+      <groupId>org.kie</groupId>
+      <artifactId>monitoring-prometheus-addon</artifactId>
+      <version>${submarine.version}</version>
     </dependency>
+
     <dependency>
-      <groupId>io.rest-assured</groupId>
-      <artifactId>rest-assured</artifactId>
-      <scope>test</scope>
+      <groupId>io.swagger</groupId>
+      <artifactId>swagger-annotations</artifactId>
+      <version>${swagger.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.submarine</groupId>
+      <artifactId>submarine-cloud-workitems</artifactId>
+      <version>${submarine.version}</version>
     </dependency>
   </dependencies>
-
   <build>
-    <finalName>${project.artifactId}</finalName>
     <plugins>
-      <plugin>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${surefire-plugin.version}</version>
-        <configuration>
-          <systemProperties>
-            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
-          </systemProperties>
-        </configuration>
-      </plugin>
       <plugin>
         <groupId>io.quarkus</groupId>
         <artifactId>quarkus-maven-plugin</artifactId>
         <version>${quarkus.version}</version>
+        <configuration>
+          <debug>false</debug>
+          <jvmArgs>-Dquarkus.http.port=8080 -Dlocal=true -Dquarkus.http.host=localhost</jvmArgs>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -82,6 +121,61 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-maven-plugin</artifactId>
+        <version>${submarine.version}</version>
+        <extensions>true</extensions>
+      </plugin>
+      <plugin>
+        <groupId>com.github.kongchen</groupId>
+        <artifactId>swagger-maven-plugin</artifactId>
+        <version>3.1.8</version>
+        <configuration>
+          <apiSources>
+            <apiSource>
+              <springmvc>false</springmvc>
+              <locations>
+                <location>com.myspace</location>
+              </locations>
+              <schemes>http,https</schemes>
+              <info>
+                <title>${project.description}</title>
+                <version>${project.version}</version>
+              </info>
+              <outputPath>${basedir}/target/classes/META-INF/resources/docs/</outputPath>
+              <outputFormats>json,yaml</outputFormats>
+              <swaggerDirectory>${basedir}/target/classes/META-INF/resources/docs/</swaggerDirectory>
+              <swaggerFileName>swagger</swaggerFileName>
+            </apiSource>
+          </apiSources>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>generate</goal>
+            </goals>
+          </execution>
+        </executions>
+        <dependencies>
+          <dependency>
+            <groupId>org.kie</groupId>
+            <artifactId>kie-api</artifactId>
+            <version>${submarine.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-core</artifactId>
+            <version>${submarine.version}</version>
+          </dependency>
+          <dependency>
+            <groupId>org.jbpm</groupId>
+            <artifactId>jbpm-flow</artifactId>
+            <version>${submarine.version}</version>
+          </dependency>
+        </dependencies>
       </plugin>
     </plugins>
   </build>
@@ -106,24 +200,10 @@
                 </goals>
                 <configuration>
                   <enableHttpUrlHandler>true</enableHttpUrlHandler>
-                </configuration>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <artifactId>maven-failsafe-plugin</artifactId>
-            <version>${surefire-plugin.version}</version>
-            <executions>
-              <execution>
-                <goals>
-                  <goal>integration-test</goal>
-                  <goal>verify</goal>
-                </goals>
-                <configuration>
-                  <systemProperties>
-                    <native.image.path>${project.build.directory}/${project.build.finalName}-runner
-                    </native.image.path>
-                  </systemProperties>
+                  <enableHttpsUrlHandler>true</enableHttpsUrlHandler>
+                  <enableJni>true</enableJni>
+                  <enableAllSecurityServices>true</enableAllSecurityServices>
+                  <additionalBuildArgs>-H:ReflectionConfigurationFiles=../reflection.json</additionalBuildArgs>
                 </configuration>
               </execution>
             </executions>
